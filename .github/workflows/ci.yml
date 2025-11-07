@@ -23,18 +23,14 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby-version }}
           bundler-cache: true
-          working-directory: sdk/ruby
 
       - name: Install dependencies
-        working-directory: sdk/ruby
         run: bundle install
 
       - name: Run RuboCop
-        working-directory: sdk/ruby
         run: bundle exec rubocop
 
       - name: Run tests
-        working-directory: sdk/ruby
         run: bundle exec rspec
 
   build:
@@ -49,14 +45,12 @@ jobs:
         with:
           ruby-version: '3.3'
           bundler-cache: true
-          working-directory: sdk/ruby
 
       - name: Build gem
-        working-directory: sdk/ruby
         run: gem build kiket-sdk.gemspec
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: gem
-          path: sdk/ruby/*.gem
+          path: '*.gem'
