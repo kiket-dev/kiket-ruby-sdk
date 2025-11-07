@@ -1,0 +1,31 @@
+# frozen_string_literal: true
+
+require_relative "secrets"
+
+class KiketSDK
+  ##
+  # High-level extension endpoints.
+  class Endpoints
+    attr_reader :secrets
+
+    def initialize(client, extension_id, event_version)
+      @client = client
+      @extension_id = extension_id
+      @event_version = event_version
+      @secrets = Secrets.new(client, extension_id)
+    end
+
+    def log_event(event, data)
+      @client.post("/extensions/#{@extension_id}/events", {
+        event: event,
+        version: @event_version,
+        data: data,
+        timestamp: Time.now.iso8601
+      })
+    end
+
+    def get_metadata
+      @client.get("/extensions/#{@extension_id}")
+    end
+  end
+end

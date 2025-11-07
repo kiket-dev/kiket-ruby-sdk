@@ -1,0 +1,79 @@
+name: Publish Gem
+
+on:
+  push:
+    tags:
+      - 'ruby-v*'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/ruby-v}" >> $GITHUB_OUTPUT
+
+      - name: Verify gemspec version matches tag
+        working-directory: sdk/ruby
+        run: |
+          GEMSPEC_VERSION=$(ruby -e "spec = Gem::Specification::load('kiket-sdk.gemspec'); puts spec.version")
+          if [ "$GEMSPEC_VERSION" != "${{ steps.version.outputs.VERSION }}" ]; then
+            echo "Version mismatch: gemspec has $GEMSPEC_VERSION but tag is ${{ steps.version.outputs.VERSION }}"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        working-directory: sdk/ruby
+        run: bundle install
+
+      - name: Run tests
+        working-directory: sdk/ruby
+        run: bundle exec rspec
+
+      - name: Build gem
+        working-directory: sdk/ruby
+        run: gem build kiket-sdk.gemspec
+
+      - name: Publish to GitHub Packages
+        working-directory: sdk/ruby
+        run: |
+          mkdir -p $HOME/.gem
+          cat << EOF > $HOME/.gem/credentials
+          ---
+          :github: Bearer ${{ secrets.GITHUB_TOKEN }}
+          EOF
+          chmod 0600 $HOME/.gem/credentials
+          gem push --key github --host https://rubygems.pkg.github.com/kiket/kiket-ruby-sdk *.gem
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ruby-v${{ steps.version.outputs.VERSION }}
+          name: Ruby SDK v${{ steps.version.outputs.VERSION }}
+          body: |
+            Release of kiket-sdk (Ruby) version ${{ steps.version.outputs.VERSION }}
+
+            ## Installation
+            ```ruby
+            gem 'kiket-sdk', '~> ${{ steps.version.outputs.VERSION }}'
+            ```
+
+            ## Changes
+            See [CHANGELOG.md](https://github.com/kiket/kiket-ruby-sdk/blob/main/CHANGELOG.md) for details.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

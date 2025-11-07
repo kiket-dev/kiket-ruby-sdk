@@ -1,0 +1,192 @@
+# Kiket Ruby SDK
+
+> Build and run Kiket extensions with a batteries-included, strongly-typed Ruby toolkit.
+
+## Features
+
+- 🔌 **Webhook decorators** – define handlers with `sdk.webhook("issue.created", version: "v1")`.
+- 🔐 **Transparent authentication** – HMAC verification for inbound payloads, workspace-token client for outbound calls.
+- 🔑 **Secret manager** – list, fetch, rotate, and delete extension secrets stored in Google Secret Manager.
+- 🌐 **Built-in Sinatra app** – serve extension webhooks locally or in production without extra wiring.
+- 🔁 **Version-aware routing** – register multiple handlers per event and propagate version headers on outbound calls.
+- 📦 **Manifest-aware defaults** – automatically loads `extension.yaml`/`manifest.yaml`, applies configuration defaults, and hydrates secrets from `KIKET_SECRET_*` environment variables.
+- 🧱 **Typed & documented** – designed for Ruby 3.2+ with rich documentation.
+- 📊 **Telemetry & feedback hooks** – capture handler duration/success metrics automatically.
+
+## Quickstart
+
+```bash
+gem install kiket-sdk
+```
+
+```ruby
+# main.rb
+require 'kiket_sdk'
+
+sdk = KiketSDK.new(
+  webhook_secret: 'sh_123',
+  workspace_token: 'wk_test',
+  extension_id: 'com.example.marketing',
+  extension_version: '1.0.0'
+)
+
+# Register webhook handler (v1)
+sdk.register('issue.created', version: 'v1') do |payload, context|
+  summary = payload['issue']['title']
+  puts "Event version: #{context[:event_version]}"
+
+  context[:endpoints].log_event('issue.created', summary: summary)
+  context[:secrets].set('WEBHOOK_TOKEN', 'abc123')
+
+  { ok: true }
+end
+
+# Register webhook handler (v2)
+sdk.register('issue.created', version: 'v2') do |payload, context|
+  summary = payload['issue']['title']
+
+  context[:endpoints].log_event('issue.created', summary: summary, schema: 'v2')
+
+  { ok: true, version: context[:event_version] }
+end
+
+sdk.run!(host: '0.0.0.0', port: 8080)
+```
+
+## Configuration
+
+### Environment Variables
+
+- `KIKET_WEBHOOK_SECRET` – Webhook HMAC secret for signature verification
+- `KIKET_WORKSPACE_TOKEN` – Workspace token for API authentication
+- `KIKET_BASE_URL` – Kiket API base URL (defaults to `https://kiket.dev`)
+- `KIKET_SDK_TELEMETRY_URL` – Telemetry reporting endpoint (optional)
+- `KIKET_SDK_TELEMETRY_OPTOUT` – Set to `1` to disable telemetry
+- `KIKET_SECRET_*` – Secret overrides (e.g., `KIKET_SECRET_API_KEY`)
+
+### Manifest File
+
+Create an `extension.yaml` or `manifest.yaml` file:
+
+```yaml
+id: com.example.marketing
+version: 1.0.0
+delivery_secret: sh_production_secret
+
+settings:
+  - key: API_KEY
+    secret: true
+  - key: MAX_RETRIES
+    default: 3
+  - key: TIMEOUT_MS
+    default: 5000
+```
+
+## API Reference
+
+### KiketSDK
+
+Main SDK class for building extensions.
+
+```ruby
+sdk = KiketSDK.new(
+  webhook_secret: String,
+  workspace_token: String,
+  base_url: String,
+  settings: Hash,
+  extension_id: String,
+  extension_version: String,
+  manifest_path: String,
+  auto_env_secrets: Boolean,
+  telemetry_enabled: Boolean,
+  feedback_hook: Proc,
+  telemetry_url: String
+)
+```
+
+**Methods:**
+
+- `sdk.register(event, version:, &handler)` – Register a webhook handler
+- `sdk.webhook(event, version:)` – Decorator for registering handlers
+- `sdk.run!(host:, port:)` – Start the Sinatra server
+
+### Handler Context
+
+Context hash passed to webhook handlers:
+
+```ruby
+{
+  event: String,
+  event_version: String,
+  headers: Hash,
+  client: KiketSDK::Client,
+  endpoints: KiketSDK::Endpoints,
+  settings: Hash,
+  extension_id: String,
+  extension_version: String,
+  secrets: KiketSDK::Secrets
+}
+```
+
+## Testing
+
+The SDK includes test helpers:
+
+```ruby
+require 'kiket_sdk'
+require 'rack/test'
+
+RSpec.describe 'My webhook handler' do
+  include Rack::Test::Methods
+
+  let(:sdk) do
+    KiketSDK.new(webhook_secret: 'test-secret')
+  end
+
+  def app
+    sdk
+  end
+
+  it 'handles issue.created event' do
+    sdk.register('issue.created', version: 'v1') do |payload, context|
+      { processed: payload['issue']['id'] }
+    end
+
+    payload = { issue: { id: '123', title: 'Test Issue' } }
+    body = payload.to_json
+    sig_data = KiketSDK::Auth.generate_signature('test-secret', body)
+
+    post '/v/1/webhooks/issue.created',
+         body,
+         'CONTENT_TYPE' => 'application/json',
+         'HTTP_X_KIKET_SIGNATURE' => sig_data[:signature],
+         'HTTP_X_KIKET_TIMESTAMP' => sig_data[:timestamp]
+
+    expect(last_response.status).to eq(200)
+    expect(JSON.parse(last_response.body)['processed']).to eq('123')
+  end
+end
+```
+
+## Publishing to GitHub Packages
+
+When you are ready to cut a release:
+
+1. Update the version in `kiket-sdk.gemspec`.
+2. Run the test suite (`bundle exec rspec`) and linting (`bundle exec rubocop`).
+3. Build gem:
+   ```bash
+   gem build kiket-sdk.gemspec
+   ```
+4. Commit and tag the release:
+   ```bash
+   git add kiket-sdk.gemspec
+   git commit -m "Bump Ruby SDK to v0.x.y"
+   git tag ruby-v0.x.y
+   git push --tags
+   ```
+5. GitHub Actions will automatically publish to GitHub Packages.
+
+## License
+
+MIT
