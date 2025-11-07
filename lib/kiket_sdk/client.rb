@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "faraday"
-require "faraday/retry"
+require 'faraday'
+require 'faraday/retry'
 
 class KiketSDK
   ##
@@ -17,8 +17,8 @@ class KiketSDK
         f.response :json
         f.adapter Faraday.default_adapter
 
-        f.headers["Content-Type"] = "application/json"
-        f.headers["User-Agent"] = "kiket-sdk-ruby/#{KiketSDK::VERSION}"
+        f.headers['Content-Type'] = 'application/json'
+        f.headers['User-Agent'] = "kiket-sdk-ruby/#{KiketSDK::VERSION}"
       end
     end
 
@@ -55,8 +55,8 @@ class KiketSDK
     private
 
     def add_auth_headers(req)
-      req.headers["Authorization"] = "Bearer #{@workspace_token}" if @workspace_token
-      req.headers["X-Kiket-Event-Version"] = @event_version if @event_version
+      req.headers['Authorization'] = "Bearer #{@workspace_token}" if @workspace_token
+      req.headers['X-Kiket-Event-Version'] = @event_version if @event_version
     end
   end
 end

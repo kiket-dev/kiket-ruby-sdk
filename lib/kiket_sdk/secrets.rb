@@ -11,7 +11,7 @@ class KiketSDK
 
     def get(key)
       response = @client.get("/extensions/#{@extension_id}/secrets/#{key}")
-      response["value"]
+      response['value']
     rescue StandardError
       nil
     end
@@ -26,7 +26,7 @@ class KiketSDK
 
     def list
       response = @client.get("/extensions/#{@extension_id}/secrets")
-      response["keys"]
+      response['keys']
     end
 
     def rotate(key, new_value)

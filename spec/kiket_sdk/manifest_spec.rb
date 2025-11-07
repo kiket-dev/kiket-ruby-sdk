@@ -53,9 +53,9 @@ RSpec.describe KiketSDK::Manifest do
       defaults = manifest.settings_defaults
 
       expect(defaults).to eq({
-        'MAX_RETRIES' => 3,
-        'TIMEOUT' => 5000
-      })
+                               'MAX_RETRIES' => 3,
+                               'TIMEOUT' => 5000
+                             })
     end
 
     it 'returns empty hash when no settings' do

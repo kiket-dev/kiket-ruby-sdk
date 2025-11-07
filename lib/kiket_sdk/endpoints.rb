@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "secrets"
+require_relative 'secrets'
 
 class KiketSDK
   ##
@@ -17,11 +17,11 @@ class KiketSDK
 
     def log_event(event, data)
       @client.post("/extensions/#{@extension_id}/events", {
-        event: event,
-        version: @event_version,
-        data: data,
-        timestamp: Time.now.iso8601
-      })
+                     event: event,
+                     version: @event_version,
+                     data: data,
+                     timestamp: Time.now.iso8601
+                   })
     end
 
     def get_metadata

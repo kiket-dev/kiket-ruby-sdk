@@ -11,7 +11,7 @@ class KiketSDK
     def initialize(options = {})
       @webhook_secret = options[:webhook_secret]
       @workspace_token = options[:workspace_token]
-      @base_url = options[:base_url] || "https://kiket.dev"
+      @base_url = options[:base_url] || 'https://kiket.dev'
       @settings = options[:settings] || {}
       @extension_id = options[:extension_id]
       @extension_version = options[:extension_version]

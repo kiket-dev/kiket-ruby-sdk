@@ -9,7 +9,7 @@ RSpec.describe KiketSDK::Secrets do
   describe '#get' do
     it 'retrieves a secret value' do
       allow(client).to receive(:get).with('/extensions/test-extension/secrets/API_KEY')
-                                     .and_return({ 'value' => 'secret-value' })
+                                    .and_return({ 'value' => 'secret-value' })
 
       result = secrets.get('API_KEY')
 
@@ -47,11 +47,11 @@ RSpec.describe KiketSDK::Secrets do
   describe '#list' do
     it 'lists all secret keys' do
       allow(client).to receive(:get).with('/extensions/test-extension/secrets')
-                                     .and_return({ 'keys' => ['API_KEY', 'SECRET_TOKEN'] })
+                                    .and_return({ 'keys' => %w[API_KEY SECRET_TOKEN] })
 
       result = secrets.list
 
-      expect(result).to eq(['API_KEY', 'SECRET_TOKEN'])
+      expect(result).to eq(%w[API_KEY SECRET_TOKEN])
     end
   end
 

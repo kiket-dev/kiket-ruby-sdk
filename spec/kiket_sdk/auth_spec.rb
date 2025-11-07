@@ -80,7 +80,7 @@ RSpec.describe KiketSDK::Auth do
     end
 
     it 'uses provided timestamp' do
-      timestamp = 1234567890
+      timestamp = 1_234_567_890
       result = described_class.generate_signature(secret, body, timestamp)
 
       expect(result[:timestamp]).to eq(timestamp.to_s)

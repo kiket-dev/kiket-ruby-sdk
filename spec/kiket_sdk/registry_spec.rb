@@ -7,7 +7,7 @@ RSpec.describe KiketSDK::Registry do
 
   describe '#register' do
     it 'registers a handler' do
-      handler = ->(payload, context) { { ok: true } }
+      handler = ->(_payload, _context) { { ok: true } }
 
       registry.register('test.event', 'v1', handler)
 
@@ -19,8 +19,8 @@ RSpec.describe KiketSDK::Registry do
     end
 
     it 'allows multiple versions of same event' do
-      handler_v1 = ->(payload, context) { { version: 'v1' } }
-      handler_v2 = ->(payload, context) { { version: 'v2' } }
+      handler_v1 = ->(_payload, _context) { { version: 'v1' } }
+      handler_v2 = ->(_payload, _context) { { version: 'v2' } }
 
       registry.register('test.event', 'v1', handler_v1)
       registry.register('test.event', 'v2', handler_v2)
@@ -36,7 +36,7 @@ RSpec.describe KiketSDK::Registry do
     end
 
     it 'returns handler metadata' do
-      handler = ->(payload, context) { { ok: true } }
+      handler = ->(_payload, _context) { { ok: true } }
       registry.register('test.event', 'v1', handler)
 
       metadata = registry.get('test.event', 'v1')

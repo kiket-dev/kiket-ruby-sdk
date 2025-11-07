@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
-require "sinatra/base"
-require "json"
-require "yaml"
-require_relative "kiket_sdk/version"
-require_relative "kiket_sdk/auth"
-require_relative "kiket_sdk/client"
-require_relative "kiket_sdk/config"
-require_relative "kiket_sdk/endpoints"
-require_relative "kiket_sdk/manifest"
-require_relative "kiket_sdk/registry"
-require_relative "kiket_sdk/secrets"
-require_relative "kiket_sdk/telemetry"
+require 'sinatra/base'
+require 'json'
+require 'yaml'
+require_relative 'kiket_sdk/version'
+require_relative 'kiket_sdk/auth'
+require_relative 'kiket_sdk/client'
+require_relative 'kiket_sdk/config'
+require_relative 'kiket_sdk/endpoints'
+require_relative 'kiket_sdk/manifest'
+require_relative 'kiket_sdk/registry'
+require_relative 'kiket_sdk/secrets'
+require_relative 'kiket_sdk/telemetry'
 
 ##
 # Main SDK class for building Kiket extensions.
@@ -49,16 +49,16 @@ class KiketSDK < Sinatra::Base
 
   ##
   # Start the Sinatra server.
-  def run!(host: "127.0.0.1", port: 8000)
+  def run!(host: '127.0.0.1', port: 8000)
     puts "🚀 Kiket extension listening on http://#{host}:#{port}"
-    puts "📦 Extension: #{@config[:extension_id] || "unknown"}"
-    puts "📝 Registered events: #{@registry.event_names.join(", ")}"
+    puts "📦 Extension: #{@config[:extension_id] || 'unknown'}"
+    puts "📝 Registered events: #{@registry.event_names.join(', ')}"
 
     Rack::Handler::Puma.run(
       self,
       Host: host,
       Port: port,
-      Threads: "0:16"
+      Threads: '0:16'
     )
   end
 
@@ -66,19 +66,19 @@ class KiketSDK < Sinatra::Base
 
   def setup_routes
     # Webhook endpoints
-    post "/webhooks/:event" do
+    post '/webhooks/:event' do
       dispatch_webhook(params[:event], nil)
     end
 
-    post "/v/:version/webhooks/:event" do
+    post '/v/:version/webhooks/:event' do
       dispatch_webhook(params[:event], params[:version])
     end
 
     # Health check
-    get "/health" do
+    get '/health' do
       content_type :json
       {
-        status: "ok",
+        status: 'ok',
         extension_id: @config[:extension_id],
         extension_version: @config[:extension_version],
         registered_events: @registry.event_names
@@ -103,12 +103,10 @@ class KiketSDK < Sinatra::Base
 
     # Determine version
     requested_version = path_version ||
-                       request.env["HTTP_X_KIKET_EVENT_VERSION"] ||
-                       params["version"]
+                        request.env['HTTP_X_KIKET_EVENT_VERSION'] ||
+                        params['version']
 
-    if requested_version.nil? || requested_version.empty?
-      halt 400, { error: "Event version required" }.to_json
-    end
+    halt 400, { error: 'Event version required' }.to_json if requested_version.nil? || requested_version.empty?
 
     # Get handler
     metadata = @registry.get(event, requested_version)
@@ -146,24 +144,24 @@ class KiketSDK < Sinatra::Base
       result = metadata[:handler].call(payload, context)
       duration_ms = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000
 
-      @telemetry.record(event, metadata[:version], "ok", duration_ms)
+      @telemetry.record(event, metadata[:version], 'ok', duration_ms)
 
       content_type :json
       (result || { ok: true }).to_json
     rescue StandardError => e
       duration_ms = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000
-      @telemetry.record(event, metadata[:version], "error", duration_ms, e.message)
+      @telemetry.record(event, metadata[:version], 'error', duration_ms, e.message)
 
       halt 500, { error: e.message }.to_json
     end
   end
 
   def resolve_config(config, manifest)
-    base_url = config[:base_url] || ENV.fetch("KIKET_BASE_URL", "https://kiket.dev")
-    workspace_token = config[:workspace_token] || ENV.fetch("KIKET_WORKSPACE_TOKEN", nil)
+    base_url = config[:base_url] || ENV.fetch('KIKET_BASE_URL', 'https://kiket.dev')
+    workspace_token = config[:workspace_token] || ENV.fetch('KIKET_WORKSPACE_TOKEN', nil)
     webhook_secret = config[:webhook_secret] ||
-                    manifest&.delivery_secret ||
-                    ENV.fetch("KIKET_WEBHOOK_SECRET", nil)
+                     manifest&.delivery_secret ||
+                     ENV.fetch('KIKET_WEBHOOK_SECRET', nil)
 
     settings = {}
     if manifest
@@ -174,7 +172,7 @@ class KiketSDK < Sinatra::Base
 
     extension_id = config[:extension_id] || manifest&.id
     extension_version = config[:extension_version] || manifest&.version
-    telemetry_url = config[:telemetry_url] || ENV.fetch("KIKET_SDK_TELEMETRY_URL", nil)
+    telemetry_url = config[:telemetry_url] || ENV.fetch('KIKET_SDK_TELEMETRY_URL', nil)
 
     {
       webhook_secret: webhook_secret,
@@ -190,7 +188,7 @@ class KiketSDK < Sinatra::Base
   end
 
   def extract_headers(env)
-    env.select { |k, _| k.start_with?("HTTP_") }
-       .transform_keys { |k| k.sub(/^HTTP_/, "").tr("_", "-").downcase }
+    env.select { |k, _| k.start_with?('HTTP_') }
+       .transform_keys { |k| k.sub(/^HTTP_/, '').tr('_', '-').downcase }
   end
 end
