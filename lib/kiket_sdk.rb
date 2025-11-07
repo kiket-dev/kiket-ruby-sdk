@@ -3,6 +3,12 @@
 require 'sinatra/base'
 require 'json'
 require 'yaml'
+
+##
+# Main SDK class for building Kiket extensions.
+class KiketSDK < Sinatra::Base
+end
+
 require_relative 'kiket_sdk/version'
 require_relative 'kiket_sdk/auth'
 require_relative 'kiket_sdk/client'
@@ -13,9 +19,8 @@ require_relative 'kiket_sdk/registry'
 require_relative 'kiket_sdk/secrets'
 require_relative 'kiket_sdk/telemetry'
 
-##
-# Main SDK class for building Kiket extensions.
-class KiketSDK < Sinatra::Base
+# Reopen class to add methods
+class KiketSDK
   def initialize(config = {})
     @manifest = KiketSDK::Manifest.load(config[:manifest_path])
     @config = resolve_config(config, @manifest)
