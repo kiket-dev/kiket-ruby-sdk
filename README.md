@@ -10,6 +10,7 @@
 - 🌐 **Built-in Sinatra app** – serve extension webhooks locally or in production without extra wiring.
 - 🔁 **Version-aware routing** – register multiple handlers per event and propagate version headers on outbound calls.
 - 📦 **Manifest-aware defaults** – automatically loads `extension.yaml`/`manifest.yaml`, applies configuration defaults, and hydrates secrets from `KIKET_SECRET_*` environment variables.
+- 📇 **Custom data helper** – call `/api/v1/ext/custom_data/...` with `context[:endpoints].custom_data(project_id)` using the configured extension API key.
 - 🧱 **Typed & documented** – designed for Ruby 3.2+ with rich documentation.
 - 📊 **Telemetry & feedback hooks** – capture handler duration/success metrics automatically.
 
@@ -53,12 +54,33 @@ end
 sdk.run!(host: '0.0.0.0', port: 8080)
 ```
 
+### Custom Data Client
+
+When your manifest includes `custom_data.permissions`, set `extension_api_key` (or the `KIKET_EXTENSION_API_KEY` environment variable) so outbound calls to the extension API include `X-Kiket-API-Key`:
+
+```ruby
+sdk.register('issue.created', version: 'v1') do |payload, context|
+  project_id = payload.dig('issue', 'project_id')
+  custom_data = context[:endpoints].custom_data(project_id)
+
+  list = custom_data.list('com.example.crm.contacts', 'automation_records', limit: 10, filters: { status: 'active' })
+
+  custom_data.create('com.example.crm.contacts', 'automation_records', {
+    email: 'lead@example.com',
+    metadata: { source: 'webhook' }
+  })
+
+  { synced: list['data'].size }
+end
+```
+
 ## Configuration
 
 ### Environment Variables
 
 - `KIKET_WEBHOOK_SECRET` – Webhook HMAC secret for signature verification
 - `KIKET_WORKSPACE_TOKEN` – Workspace token for API authentication
+- `KIKET_EXTENSION_API_KEY` – Extension API key for `/api/v1/ext/**` endpoints (custom data client)
 - `KIKET_BASE_URL` – Kiket API base URL (defaults to `https://kiket.dev`)
 - `KIKET_SDK_TELEMETRY_URL` – Telemetry reporting endpoint (optional)
 - `KIKET_SDK_TELEMETRY_OPTOUT` – Set to `1` to disable telemetry

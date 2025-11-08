@@ -5,12 +5,17 @@ require 'spec_helper'
 RSpec.describe KiketSDK::Client do
   let(:base_url) { 'https://api.test.com' }
   let(:workspace_token) { 'wk_test_token' }
-  let(:client) { described_class.new(base_url, workspace_token, 'v1') }
+  let(:extension_api_key) { 'ext_123' }
+  let(:client) { described_class.new(base_url, workspace_token, 'v1', extension_api_key) }
 
   describe '#get' do
     it 'makes GET request with auth headers' do
       stub_request(:get, "#{base_url}/test")
-        .with(headers: { 'Authorization' => "Bearer #{workspace_token}", 'X-Kiket-Event-Version' => 'v1' })
+        .with(headers: {
+                'Authorization' => "Bearer #{workspace_token}",
+                'X-Kiket-Event-Version' => 'v1',
+                'X-Kiket-API-Key' => extension_api_key
+              })
         .to_return(status: 200, body: '{"result":"success"}', headers: { 'Content-Type' => 'application/json' })
 
       result = client.get('/test')
@@ -24,7 +29,10 @@ RSpec.describe KiketSDK::Client do
       stub_request(:post, "#{base_url}/test")
         .with(
           body: { name: 'test' }.to_json,
-          headers: { 'Authorization' => "Bearer #{workspace_token}" }
+          headers: {
+            'Authorization' => "Bearer #{workspace_token}",
+            'X-Kiket-API-Key' => extension_api_key
+          }
         )
         .to_return(status: 200, body: '{"id":"123"}', headers: { 'Content-Type' => 'application/json' })
 
@@ -57,3 +65,14 @@ RSpec.describe KiketSDK::Client do
     end
   end
 end
+  describe '#patch' do
+    it 'makes PATCH request' do
+      stub_request(:patch, "#{base_url}/test")
+        .with(body: { value: 'patched' }.to_json)
+        .to_return(status: 200, body: '{"patched":true}', headers: { 'Content-Type' => 'application/json' })
+
+      result = client.patch('/test', { value: 'patched' })
+
+      expect(result).to eq({ 'patched' => true })
+    end
+  end

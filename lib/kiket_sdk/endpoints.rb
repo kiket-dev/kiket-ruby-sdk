@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'secrets'
+require_relative 'custom_data'
 
 class KiketSDK
   ##
@@ -26,6 +27,10 @@ class KiketSDK
 
     def get_metadata
       @client.get("/extensions/#{@extension_id}")
+    end
+
+    def custom_data(project_id)
+      KiketSDK::CustomData.new(@client, project_id)
     end
   end
 end
