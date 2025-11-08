@@ -51,7 +51,7 @@ jobs:
           :github: Bearer ${{ secrets.GITHUB_TOKEN }}
           EOF
           chmod 0600 $HOME/.gem/credentials
-          gem push --key github --host https://rubygems.pkg.github.com/kiket-dev/kiket-ruby-sdk *.gem
+          gem push --key github --host https://rubygems.pkg.github.com/kiket-dev *.gem
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
