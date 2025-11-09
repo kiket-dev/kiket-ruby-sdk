@@ -6,13 +6,13 @@ Gem::Specification.new do |spec|
 
   spec.summary       = 'Official Ruby SDK for building Kiket extensions'
   spec.description   = 'Build and run Kiket extensions with a batteries-included, strongly-typed Ruby toolkit'
-  spec.homepage      = 'https://github.com/kiket/kiket'
+  spec.homepage      = 'https://github.com/kiket-dev/kiket-ruby-sdk'
   spec.license       = 'MIT'
   spec.required_ruby_version = '>= 3.2.0'
 
   spec.metadata['homepage_uri'] = spec.homepage
-  spec.metadata['source_code_uri'] = 'https://github.com/kiket/kiket-ruby-sdk'
-  spec.metadata['changelog_uri'] = 'https://github.com/kiket/kiket-ruby-sdk/blob/main/CHANGELOG.md'
+  spec.metadata['source_code_uri'] = 'https://github.com/kiket-dev/kiket-ruby-sdk'
+  spec.metadata['changelog_uri'] = 'https://github.com/kiket-dev/kiket-ruby-sdk/blob/main/CHANGELOG.md'
   spec.metadata['rubygems_mfa_required'] = 'true'
 
   spec.files = Dir.glob('{lib,spec}/**/*') + %w[README.md LICENSE]
