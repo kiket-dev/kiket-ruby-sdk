@@ -64,7 +64,7 @@ RSpec.describe KiketSDK::Client do
       expect(result).to eq({ 'deleted' => true })
     end
   end
-end
+
   describe '#patch' do
     it 'makes PATCH request' do
       stub_request(:patch, "#{base_url}/test")
@@ -76,3 +76,4 @@ end
       expect(result).to eq({ 'patched' => true })
     end
   end
+end

@@ -15,10 +15,12 @@ require_relative 'kiket_sdk/client'
 require_relative 'kiket_sdk/config'
 require_relative 'kiket_sdk/endpoints'
 require_relative 'kiket_sdk/custom_data'
+require_relative 'kiket_sdk/sla_events'
 require_relative 'kiket_sdk/manifest'
 require_relative 'kiket_sdk/registry'
 require_relative 'kiket_sdk/secrets'
 require_relative 'kiket_sdk/telemetry'
+require_relative 'kiket/notifications'
 
 # Reopen class to add methods
 class KiketSDK

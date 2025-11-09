@@ -74,6 +74,26 @@ sdk.register('issue.created', version: 'v1') do |payload, context|
 end
 ```
 
+### SLA Alert Stream
+
+You can also query live SLA alerts from within webhook handlers:
+
+```ruby
+sdk.register('workflow.sla_status', version: 'v1') do |payload, context|
+  project_id = payload.dig('issue', 'project_id')
+  sla_events = context[:endpoints].sla_events(project_id)
+
+  events = sla_events.list(state: 'imminent', limit: 5)
+  next { ok: true } if events['data'].empty?
+
+  first = events['data'].first
+  context[:endpoints].secrets # available if you need per-alert secrets
+
+  context[:endpoints].log_event('sla.warning', issue_id: first['issue_id'], state: first['state'])
+  { acknowledged: true }
+end
+```
+
 ## Configuration
 
 ### Environment Variables

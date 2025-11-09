@@ -2,6 +2,7 @@
 
 require_relative 'secrets'
 require_relative 'custom_data'
+require_relative 'sla_events'
 
 class KiketSDK
   ##
@@ -31,6 +32,10 @@ class KiketSDK
 
     def custom_data(project_id)
       KiketSDK::CustomData.new(@client, project_id)
+    end
+
+    def sla_events(project_id)
+      KiketSDK::SlaEvents.new(@client, project_id)
     end
   end
 end
