@@ -33,7 +33,8 @@ class KiketSDK
       @config[:telemetry_url],
       @config[:feedback_hook],
       @config[:extension_id],
-      @config[:extension_version]
+      @config[:extension_version],
+      @config[:extension_api_key]
     )
 
     super()
@@ -159,7 +160,7 @@ class KiketSDK
       (result || { ok: true }).to_json
     rescue StandardError => e
       duration_ms = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000
-      @telemetry.record(event, metadata[:version], 'error', duration_ms, e.message)
+      @telemetry.record(event, metadata[:version], 'error', duration_ms, e.message, error_class: e.class.name)
 
       halt 500, { error: e.message }.to_json
     end
@@ -182,7 +183,9 @@ class KiketSDK
 
     extension_id = config[:extension_id] || manifest&.id
     extension_version = config[:extension_version] || manifest&.version
-    telemetry_url = config[:telemetry_url] || ENV.fetch('KIKET_SDK_TELEMETRY_URL', nil)
+    telemetry_url = config[:telemetry_url] ||
+                    ENV.fetch('KIKET_SDK_TELEMETRY_URL', nil) ||
+                    "#{base_url.sub(%r{/+$}, '')}/api/v1/ext"
 
     {
       webhook_secret: webhook_secret,
