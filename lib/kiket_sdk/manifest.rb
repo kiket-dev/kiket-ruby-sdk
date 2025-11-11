@@ -16,7 +16,7 @@ class KiketSDK
     end
 
     def self.load(path = nil)
-      paths = path ? [path] : %w[extension.yaml manifest.yaml extension.yml manifest.yml]
+      paths = path ? [ path ] : %w[extension.yaml manifest.yaml extension.yml manifest.yml]
 
       paths.each do |p|
         full_path = File.expand_path(p, Dir.pwd)
