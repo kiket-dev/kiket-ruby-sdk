@@ -11,6 +11,7 @@
 - 🔁 **Version-aware routing** – register multiple handlers per event and propagate version headers on outbound calls.
 - 📦 **Manifest-aware defaults** – automatically loads `extension.yaml`/`manifest.yaml`, applies configuration defaults, and hydrates secrets from `KIKET_SECRET_*` environment variables.
 - 📇 **Custom data helper** – call `/api/v1/ext/custom_data/...` with `context[:endpoints].custom_data(project_id)` using the configured extension API key.
+- 📉 **Rate-limit helper** – inspect `/api/v1/ext/rate_limit` before launching heavy automation bursts.
 - 🧱 **Typed & documented** – designed for Ruby 3.2+ with rich documentation.
 - 📊 **Telemetry & feedback hooks** – capture handler duration/success metrics automatically.
 
@@ -232,3 +233,24 @@ When you are ready to cut a release:
 ## License
 
 MIT
+### Rate-Limit Helper
+
+Before enqueueing expensive jobs, inspect the current extension window:
+
+```ruby
+sandbox = sdk.register('automation.dispatch', version: 'v1') do |_payload, context|
+  limits = context[:endpoints].rate_limit
+
+  if limits['remaining'] < 5
+    context[:endpoints].notify(
+      'Rate limit warning',
+      "Only #{limits['remaining']} requests remain (reset in #{limits['reset_in']}s)",
+      'warning'
+    )
+    next({ deferred: true })
+  end
+
+  # Continue with the heavy work
+  { ok: true }
+end
+```

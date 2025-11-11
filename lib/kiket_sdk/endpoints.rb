@@ -37,5 +37,10 @@ class KiketSDK
     def sla_events(project_id)
       KiketSDK::SlaEvents.new(@client, project_id)
     end
+
+    def rate_limit
+      response = @client.get("/api/v1/ext/rate_limit")
+      response.fetch("rate_limit", {})
+    end
   end
 end
