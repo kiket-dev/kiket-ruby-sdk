@@ -3,6 +3,7 @@
 require_relative 'secrets'
 require_relative 'custom_data'
 require_relative 'sla_events'
+require_relative 'intake_forms'
 
 class KiketSDK
   ##
@@ -36,6 +37,10 @@ class KiketSDK
 
     def sla_events(project_id)
       KiketSDK::SlaEvents.new(@client, project_id)
+    end
+
+    def intake_forms(project_id)
+      KiketSDK::IntakeForms.new(@client, project_id)
     end
 
     def rate_limit
