@@ -73,9 +73,11 @@ module KiketSdk
     # Get the blockchain proof for a specific audit record.
     #
     # @param record_id [Integer] The ID of the audit record
+    # @param record_type [String] Type of record ("AuditLog" or "AIAuditLog"), defaults to "AuditLog"
     # @return [BlockchainProof]
-    def get_proof(record_id)
-      response = @client.get("/api/v1/audit/records/#{record_id}/proof")
+    def get_proof(record_id, record_type: "AuditLog")
+      params = record_type != "AuditLog" ? { record_type: record_type } : {}
+      response = @client.get("/api/v1/audit/records/#{record_id}/proof", params)
       parse_proof(response.body)
     end
 
