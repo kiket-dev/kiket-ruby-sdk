@@ -76,4 +76,42 @@ RSpec.describe KiketSDK::Client do
       expect(result).to eq({ 'patched' => true })
     end
   end
+
+  describe 'runtime token authentication' do
+    let(:runtime_token) { 'rt_test_runtime_token' }
+    let(:client_with_runtime_token) do
+      described_class.new(base_url, workspace_token, 'v1', extension_api_key, runtime_token: runtime_token)
+    end
+
+    it 'uses runtime token header when provided' do
+      stub_request(:get, "#{base_url}/test")
+        .with(headers: {
+                'Authorization' => "Bearer #{workspace_token}",
+                'X-Kiket-Event-Version' => 'v1',
+                'X-Runtime-Token' => runtime_token
+              })
+        .to_return(status: 200, body: '{"result":"success"}', headers: { 'Content-Type' => 'application/json' })
+
+      result = client_with_runtime_token.get('/test')
+
+      expect(result).to eq({ 'result' => 'success' })
+    end
+
+    it 'prefers runtime token over extension API key' do
+      stub_request(:get, "#{base_url}/test")
+        .with(headers: {
+                'X-Runtime-Token' => runtime_token
+              })
+        .to_return(status: 200, body: '{"result":"success"}', headers: { 'Content-Type' => 'application/json' })
+
+      # Verify that X-Kiket-API-Key is NOT present when runtime token is set
+      stub = stub_request(:get, "#{base_url}/verify")
+        .with { |request| !request.headers.key?('X-Kiket-API-Key') && request.headers['X-Runtime-Token'] == runtime_token }
+        .to_return(status: 200, body: '{}', headers: { 'Content-Type' => 'application/json' })
+
+      client_with_runtime_token.get('/verify')
+
+      expect(stub).to have_been_requested
+    end
+  end
 end

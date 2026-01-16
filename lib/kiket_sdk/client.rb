@@ -7,10 +7,11 @@ class KiketSDK
   ##
   # HTTP client for Kiket API.
   class Client
-    def initialize(base_url, workspace_token, event_version = nil, extension_api_key = nil)
+    def initialize(base_url, workspace_token, event_version = nil, extension_api_key = nil, runtime_token: nil)
       @workspace_token = workspace_token
       @event_version = event_version
       @extension_api_key = extension_api_key
+      @runtime_token = runtime_token
 
       @conn = Faraday.new(url: base_url) do |f|
         f.request :json
@@ -66,7 +67,12 @@ class KiketSDK
     def add_auth_headers(req)
       req.headers['Authorization'] = "Bearer #{@workspace_token}" if @workspace_token
       req.headers['X-Kiket-Event-Version'] = @event_version if @event_version
-      req.headers['X-Kiket-API-Key'] = @extension_api_key if @extension_api_key
+      # Prefer runtime token over extension API key for per-invocation auth
+      if @runtime_token
+        req.headers['X-Runtime-Token'] = @runtime_token
+      elsif @extension_api_key
+        req.headers['X-Kiket-API-Key'] = @extension_api_key
+      end
     end
   end
 end

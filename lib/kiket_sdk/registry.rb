@@ -8,9 +8,14 @@ class KiketSDK
       @handlers = {}
     end
 
-    def register(event, version, handler)
+    def register(event, version, handler, required_scopes: [])
       key = make_key(event, version)
-      @handlers[key] = { event: event, version: version, handler: handler }
+      @handlers[key] = {
+        event: event,
+        version: version,
+        handler: handler,
+        required_scopes: Array(required_scopes)
+      }
     end
 
     def get(event, version)

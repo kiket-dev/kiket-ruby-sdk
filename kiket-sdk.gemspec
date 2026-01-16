@@ -21,6 +21,7 @@ Gem::Specification.new do |spec|
   # Runtime dependencies
   spec.add_dependency 'faraday', '~> 2.8'
   spec.add_dependency 'faraday-retry', '~> 2.2'
+  spec.add_dependency 'jwt', '~> 2.7'
   spec.add_dependency 'psych', '~> 5.1'
   spec.add_dependency 'puma', '~> 6.4'
   spec.add_dependency 'sinatra', '~> 4.0'

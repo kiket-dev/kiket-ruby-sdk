@@ -7,6 +7,19 @@ require 'yaml'
 ##
 # Main SDK class for building Kiket extensions.
 class KiketSDK < Sinatra::Base
+  ##
+  # Error raised when required scopes are not present.
+  class ScopeError < StandardError
+    attr_reader :required_scopes, :available_scopes, :missing_scopes
+
+    def initialize(required_scopes, available_scopes)
+      @required_scopes = Array(required_scopes)
+      @available_scopes = Array(available_scopes)
+      @missing_scopes = @required_scopes - @available_scopes
+
+      super("Insufficient scopes: missing #{@missing_scopes.join(', ')}")
+    end
+  end
 end
 
 require_relative 'kiket_sdk/version'
@@ -43,15 +56,21 @@ class KiketSDK
 
   ##
   # Register a webhook handler.
-  def register(event, version:, &handler)
-    @registry.register(event, version, handler)
+  # @param event [String] Event name
+  # @param version [String] Event version
+  # @param required_scopes [Array<String>] Scopes required to execute this handler
+  def register(event, version:, required_scopes: [], &handler)
+    @registry.register(event, version, handler, required_scopes: required_scopes)
   end
 
   ##
   # Webhook decorator for registering handlers.
-  def webhook(event, version:)
+  # @param event [String] Event name
+  # @param version [String] Event version
+  # @param required_scopes [Array<String>] Scopes required to execute this handler
+  def webhook(event, version:, required_scopes: [])
     lambda do |&handler|
-      register(event, version: version, &handler)
+      register(event, version: version, required_scopes: required_scopes, &handler)
       handler
     end
   end
@@ -96,16 +115,18 @@ class KiketSDK
   end
 
   def dispatch_webhook(event, path_version)
-    # Verify signature
     body = request.body.read
     request.body.rewind
 
+    # Parse payload first
+    payload = JSON.parse(body)
+
+    # Resolve API base URL from payload or config
+    api_base_url = payload.dig('api', 'base_url') || @config[:base_url]
+
+    # Verify JWT runtime token
     begin
-      KiketSDK::Auth.verify_signature(
-        @config[:webhook_secret],
-        body,
-        request.env
-      )
+      jwt_payload = KiketSDK::Auth.verify_runtime_token(payload, api_base_url)
     rescue KiketSDK::Auth::AuthenticationError => e
       halt 401, { error: e.message }.to_json
     end
@@ -123,18 +144,41 @@ class KiketSDK
       halt 404, { error: "No handler registered for event '#{event}' with version '#{requested_version}'" }.to_json
     end
 
-    # Parse payload
-    payload = JSON.parse(body)
+    # Build authentication context from verified JWT and payload
+    auth_context = build_auth_context(jwt_payload, payload)
 
-    # Create client and context
+    # Check required scopes before proceeding
+    required_scopes = metadata[:required_scopes] || []
+    unless required_scopes.empty?
+      missing = check_scopes(required_scopes, auth_context[:scopes])
+      unless missing.empty?
+        halt 403, { content_type: :json }, {
+          error: 'Insufficient scopes',
+          required_scopes: required_scopes,
+          missing_scopes: missing
+        }.to_json
+      end
+    end
+
+    # Create client with runtime token
     client = KiketSDK::Client.new(
-      @config[:base_url],
+      api_base_url,
       @config[:workspace_token],
       metadata[:version],
-      @config[:extension_api_key]
+      @config[:extension_api_key],
+      runtime_token: auth_context[:runtime_token]
     )
 
     endpoints = KiketSDK::Endpoints.new(client, @config[:extension_id], metadata[:version])
+
+    # Build scope checking utility for context
+    scope_checker = build_scope_checker(auth_context[:scopes])
+
+    # Extract payload secrets for quick access (bundled by SecretResolver)
+    payload_secrets = payload['secrets'] || {}
+
+    # Build secret helper: checks payload secrets first (per-org), falls back to ENV (extension defaults)
+    secret_helper = build_secret_helper(payload_secrets)
 
     context = {
       event: event,
@@ -145,7 +189,11 @@ class KiketSDK
       settings: @config[:settings],
       extension_id: @config[:extension_id],
       extension_version: @config[:extension_version],
-      secrets: endpoints.secrets
+      secrets: endpoints.secrets,
+      secret: secret_helper,
+      payload_secrets: payload_secrets,
+      auth: auth_context,
+      require_scopes: scope_checker
     }
 
     # Execute handler with telemetry
@@ -170,9 +218,6 @@ class KiketSDK
     base_url = config[:base_url] || ENV.fetch('KIKET_BASE_URL', 'https://kiket.dev')
     workspace_token = config[:workspace_token] || ENV.fetch('KIKET_WORKSPACE_TOKEN', nil)
     extension_api_key = config[:extension_api_key] || ENV.fetch('KIKET_EXTENSION_API_KEY', nil)
-    webhook_secret = config[:webhook_secret] ||
-                     manifest&.delivery_secret ||
-                     ENV.fetch('KIKET_WEBHOOK_SECRET', nil)
 
     settings = {}
     if manifest
@@ -188,7 +233,6 @@ class KiketSDK
                     "#{base_url.sub(%r{/+$}, '')}/api/v1/ext"
 
     {
-      webhook_secret: webhook_secret,
       workspace_token: workspace_token,
       base_url: base_url,
       settings: settings,
@@ -204,5 +248,67 @@ class KiketSDK
   def extract_headers(env)
     env.select { |k, _| k.start_with?('HTTP_') }
        .transform_keys { |k| k.sub(/^HTTP_/, '').tr('_', '-').downcase }
+  end
+
+  ##
+  # Build authentication context from verified JWT payload and raw payload.
+  # @param jwt_payload [Hash] The verified JWT claims
+  # @param raw_payload [Hash] The original webhook payload
+  def build_auth_context(jwt_payload, raw_payload)
+    raw_auth = raw_payload.is_a?(Hash) ? (raw_payload['authentication'] || {}) : {}
+
+    {
+      runtime_token: raw_auth['runtime_token'],
+      token_type: 'runtime',
+      expires_at: jwt_payload['exp'] ? Time.at(jwt_payload['exp']).iso8601 : nil,
+      scopes: jwt_payload['scopes'] || [],
+      org_id: jwt_payload['org_id'],
+      ext_id: jwt_payload['ext_id'],
+      proj_id: jwt_payload['proj_id']
+    }
+  end
+
+  ##
+  # Check if all required scopes are present.
+  # @return [Array<String>] List of missing scopes (empty if all present)
+  def check_scopes(required_scopes, available_scopes)
+    required = Array(required_scopes)
+    available = Array(available_scopes)
+
+    # Wildcard scope grants all permissions
+    return [] if available.include?('*')
+
+    required - available
+  end
+
+  ##
+  # Build a scope checker lambda for use in handler context.
+  def build_scope_checker(available_scopes)
+    lambda do |*required_scopes|
+      required = required_scopes.flatten
+      missing = check_scopes(required, available_scopes)
+      raise ScopeError.new(required, available_scopes) unless missing.empty?
+
+      true
+    end
+  end
+
+  ##
+  # Build a secret helper lambda for use in handler context.
+  # Checks payload secrets first (per-org configuration bundled by SecretResolver),
+  # then falls back to environment variables (extension defaults).
+  #
+  # @param payload_secrets [Hash] Secrets from payload['secrets']
+  # @return [Proc] Lambda that resolves secrets by key
+  #
+  # @example
+  #   # In handler:
+  #   slack_token = context[:secret].call('SLACK_BOT_TOKEN')
+  #   # Returns payload["secrets"]["SLACK_BOT_TOKEN"] || ENV["SLACK_BOT_TOKEN"]
+  def build_secret_helper(payload_secrets)
+    lambda do |key|
+      # Payload secrets (per-org) take priority over ENV (extension defaults)
+      payload_secrets[key] || payload_secrets[key.to_s] || ENV[key.to_s]
+    end
   end
 end
