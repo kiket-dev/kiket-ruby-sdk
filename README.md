@@ -167,8 +167,79 @@ Context hash passed to webhook handlers:
   settings: Hash,
   extension_id: String,
   extension_version: String,
-  secrets: KiketSDK::Secrets
+  secrets: KiketSDK::Secrets,
+  secret: Proc,              # Secret helper with payload-first fallback
+  auth: {
+    runtime_token: String,   # Per-invocation API token
+    token_type: String,      # Typically "runtime"
+    expires_at: String,      # Token expiration timestamp
+    scopes: Array<String>    # Granted API scopes
+  }
 }
+```
+
+### Secret Helper
+
+The `secret` proc provides a simple way to retrieve secrets with automatic fallback:
+
+```ruby
+# Checks payload secrets first (per-org config), falls back to ENV
+slack_token = context[:secret].call("SLACK_BOT_TOKEN")
+
+# Example usage
+sdk.register('issue.created', version: 'v1') do |payload, context|
+  api_key = context[:secret].call("API_KEY")
+  raise "API_KEY not configured" unless api_key
+
+  # Use api_key...
+  { ok: true }
+end
+```
+
+The lookup order is:
+1. **Payload secrets** (per-org configuration from `payload["secrets"]`)
+2. **Environment variables** (extension defaults via `ENV`)
+
+This allows organizations to override extension defaults with their own credentials.
+
+### Runtime Token Authentication
+
+The Kiket platform sends a per-invocation `runtime_token` in each webhook payload. This token is automatically extracted and used for all API calls made through `context[:client]` and `context[:endpoints]`. The runtime token provides organization-scoped access and is preferred over static tokens.
+
+```ruby
+sdk.register('issue.created', version: 'v1') do |payload, context|
+  # Access authentication context
+  puts "Token expires at: #{context[:auth][:expires_at]}"
+  puts "Scopes: #{context[:auth][:scopes].join(', ')}"
+
+  # API calls automatically use the runtime token
+  context[:endpoints].log_event('processed', { ok: true })
+
+  { ok: true }
+end
+```
+
+### Scope Checking
+
+Extensions can declare required scopes when registering handlers. The SDK will automatically check scopes before invoking the handler and return a 403 error if insufficient.
+
+```ruby
+# Declare required scopes at registration time
+sdk.register('issue.created', version: 'v1', required_scopes: ['issues.read', 'issues.write']) do |payload, context|
+  # Handler only executes if scopes are present
+  context[:endpoints].log_event('issue.processed', { id: payload['issue']['id'] })
+  { ok: true }
+end
+
+# Or check scopes dynamically within the handler
+sdk.register('workflow.triggered', version: 'v1') do |payload, context|
+  # Raises KiketSDK::ScopeError if scopes are missing
+  context[:require_scopes].call('workflows.execute', 'custom_data.write')
+
+  # Continue with scope-protected operations
+  context[:endpoints].custom_data(project_id).create(...)
+  { ok: true }
+end
 ```
 
 ## Testing
