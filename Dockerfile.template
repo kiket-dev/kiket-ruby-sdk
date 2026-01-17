@@ -37,5 +37,5 @@ EXPOSE ${PORT}
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:${PORT}/health || exit 1
 
-# SDK handles server via run!
-CMD ["ruby", "app.rb"]
+# Run app through bundler to ensure gems are loaded from vendor/bundle
+CMD ["bundle", "exec", "ruby", "app.rb"]
