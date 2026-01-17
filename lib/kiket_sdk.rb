@@ -50,7 +50,25 @@ class KiketSDK
     )
 
     super()
-    setup_routes
+  end
+
+  # Routes must be defined at class level in Sinatra
+  post '/webhooks/:event' do
+    dispatch_webhook(params[:event], nil)
+  end
+
+  post '/v/:version/webhooks/:event' do
+    dispatch_webhook(params[:event], params[:version])
+  end
+
+  get '/health' do
+    content_type :json
+    {
+      status: 'ok',
+      extension_id: @config&.dig(:extension_id),
+      extension_version: @config&.dig(:extension_version),
+      registered_events: @registry&.event_names || []
+    }.to_json
   end
 
   ##
@@ -90,28 +108,6 @@ class KiketSDK
   end
 
   private
-
-  def setup_routes
-    # Webhook endpoints
-    post '/webhooks/:event' do
-      dispatch_webhook(params[:event], nil)
-    end
-
-    post '/v/:version/webhooks/:event' do
-      dispatch_webhook(params[:event], params[:version])
-    end
-
-    # Health check
-    get '/health' do
-      content_type :json
-      {
-        status: 'ok',
-        extension_id: @config[:extension_id],
-        extension_version: @config[:extension_version],
-        registered_events: @registry.event_names
-      }.to_json
-    end
-  end
 
   def dispatch_webhook(event, path_version)
     body = request.body.read
