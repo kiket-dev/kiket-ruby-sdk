@@ -37,6 +37,17 @@ require_relative 'kiket/notifications'
 
 # Reopen class to add methods
 class KiketSDK
+  # Override Sinatra's new to return actual instance instead of Wrapper
+  def self.new!(config = {})
+    instance = allocate
+    instance.send(:initialize, config)
+    instance
+  end
+
+  class << self
+    alias_method :new, :new!
+  end
+
   def initialize(config = {})
     @manifest = KiketSDK::Manifest.load(config[:manifest_path])
     @config = resolve_config(config, @manifest)
