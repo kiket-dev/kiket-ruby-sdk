@@ -24,6 +24,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'jwt', '~> 2.7'
   spec.add_dependency 'psych', '~> 5.1'
   spec.add_dependency 'puma', '~> 6.4'
+  spec.add_dependency 'rackup', '~> 2.1'
   spec.add_dependency 'sinatra', '~> 4.0'
 
   # Development dependencies
