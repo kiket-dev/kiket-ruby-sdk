@@ -7,9 +7,9 @@ FROM ruby:3.4-slim
 
 WORKDIR /app
 
-# Install build dependencies
+# Install build dependencies (libyaml-dev needed for psych gem)
 RUN apt-get update -qq && \
-    apt-get install -y --no-install-recommends build-essential git curl && \
+    apt-get install -y --no-install-recommends build-essential git curl libyaml-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files first for better caching
