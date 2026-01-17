@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'bundler/setup'
 require 'sinatra/base'
 require 'rackup'
 require 'json'
@@ -111,7 +112,7 @@ class KiketSDK
     puts "📦 Extension: #{@config[:extension_id] || 'unknown'}"
     puts "📝 Registered events: #{@registry.event_names.join(', ')}"
 
-    Rackup::Handler::Puma.run(
+    Rackup::Handler.get(:puma).run(
       self,
       Host: host,
       Port: port,
