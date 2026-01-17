@@ -4,14 +4,13 @@ class KiketSDK
   ##
   # SDK configuration.
   class Config
-    attr_reader :webhook_secret, :workspace_token, :extension_api_key, :base_url, :settings,
+    attr_reader :webhook_secret, :workspace_token, :base_url, :settings,
                 :extension_id, :extension_version, :telemetry_enabled,
                 :feedback_hook, :telemetry_url
 
     def initialize(options = {})
       @webhook_secret = options[:webhook_secret]
       @workspace_token = options[:workspace_token]
-      @extension_api_key = options[:extension_api_key]
       @base_url = options[:base_url] || 'https://kiket.dev'
       @settings = options[:settings] || {}
       @extension_id = options[:extension_id]

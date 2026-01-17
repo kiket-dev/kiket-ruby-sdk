@@ -7,13 +7,12 @@ class KiketSDK
   ##
   # Telemetry reporter for SDK usage metrics.
   class Telemetry
-    def initialize(enabled, telemetry_url, feedback_hook, extension_id, extension_version, extension_api_key)
+    def initialize(enabled, telemetry_url, feedback_hook, extension_id, extension_version)
       opt_out = ENV.fetch('KIKET_SDK_TELEMETRY_OPTOUT', nil) == '1'
       @enabled = enabled && !opt_out
       @feedback_hook = feedback_hook
       @extension_id = extension_id
       @extension_version = extension_version
-      @api_key = extension_api_key
       @telemetry_endpoint = telemetry_url && build_endpoint(telemetry_url)
 
       @conn = if telemetry_url
@@ -54,9 +53,7 @@ class KiketSDK
       return unless @conn && @telemetry_endpoint
 
       begin
-        headers = {}
-        headers['X-Kiket-API-Key'] = @api_key if @api_key
-        @conn.post(@telemetry_endpoint, record_data, headers)
+        @conn.post(@telemetry_endpoint, record_data)
       rescue StandardError => e
         warn "Failed to send telemetry: #{e.message}"
       end

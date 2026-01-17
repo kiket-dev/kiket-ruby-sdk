@@ -46,8 +46,7 @@ class KiketSDK
       @config[:telemetry_url],
       @config[:feedback_hook],
       @config[:extension_id],
-      @config[:extension_version],
-      @config[:extension_api_key]
+      @config[:extension_version]
     )
 
     super()
@@ -165,7 +164,6 @@ class KiketSDK
       api_base_url,
       @config[:workspace_token],
       metadata[:version],
-      @config[:extension_api_key],
       runtime_token: auth_context[:runtime_token]
     )
 
@@ -217,7 +215,6 @@ class KiketSDK
   def resolve_config(config, manifest)
     base_url = config[:base_url] || ENV.fetch('KIKET_BASE_URL', 'https://kiket.dev')
     workspace_token = config[:workspace_token] || ENV.fetch('KIKET_WORKSPACE_TOKEN', nil)
-    extension_api_key = config[:extension_api_key] || ENV.fetch('KIKET_EXTENSION_API_KEY', nil)
 
     settings = {}
     if manifest
@@ -238,7 +235,6 @@ class KiketSDK
       settings: settings,
       extension_id: extension_id,
       extension_version: extension_version,
-      extension_api_key: extension_api_key,
       telemetry_enabled: config.fetch(:telemetry_enabled, true),
       feedback_hook: config[:feedback_hook],
       telemetry_url: telemetry_url

@@ -57,7 +57,7 @@ sdk.run!(host: '0.0.0.0', port: 8080)
 
 ### Custom Data Client
 
-When your manifest includes `custom_data.permissions`, set `extension_api_key` (or the `KIKET_EXTENSION_API_KEY` environment variable) so outbound calls to the extension API include `X-Kiket-API-Key`:
+When your manifest includes `custom_data.permissions`, the SDK automatically uses the runtime token provided in the webhook payload for API calls via `context[:client]`:
 
 ```ruby
 sdk.register('issue.created', version: 'v1') do |payload, context|
@@ -101,7 +101,6 @@ end
 
 - `KIKET_WEBHOOK_SECRET` – Webhook HMAC secret for signature verification
 - `KIKET_WORKSPACE_TOKEN` – Workspace token for API authentication
-- `KIKET_EXTENSION_API_KEY` – Extension API key for `/api/v1/ext/**` endpoints (custom data client)
 - `KIKET_BASE_URL` – Kiket API base URL (defaults to `https://kiket.dev`)
 - `KIKET_SDK_TELEMETRY_URL` – Telemetry reporting endpoint (optional)
 - `KIKET_SDK_TELEMETRY_OPTOUT` – Set to `1` to disable telemetry
