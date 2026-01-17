@@ -108,23 +108,11 @@ class KiketSDK
 
     ##
     # Build an EC public key from JWK parameters.
-    # @param jwk [Hash] The JWK key data with x and y coordinates
+    # Uses jwt gem's built-in JWK support for Ruby 3.0+ compatibility.
+    # @param jwk [Hash] The JWK key data
     # @return [OpenSSL::PKey::EC] The public key
     def build_ec_public_key(jwk)
-      x = Base64.urlsafe_decode64(jwk['x'])
-      y = Base64.urlsafe_decode64(jwk['y'])
-
-      # Build uncompressed point: 0x04 || x || y
-      point_hex = '04' + x.unpack1('H*') + y.unpack1('H*')
-      point_bn = OpenSSL::BN.new(point_hex, 16)
-
-      group = OpenSSL::PKey::EC::Group.new('prime256v1')
-      point = OpenSSL::PKey::EC::Point.new(group, point_bn)
-
-      # Create EC key with public point
-      key = OpenSSL::PKey::EC.new(group)
-      key.public_key = point
-      key
+      JWT::JWK.import(jwk).verify_key
     end
 
     ##
