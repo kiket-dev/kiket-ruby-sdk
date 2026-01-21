@@ -87,7 +87,7 @@ RSpec.describe KiketSDK::Manifest do
       data = {
         'id' => 'test',
         'version' => '1.0.0',
-        'settings' => [ { 'key' => 'MAX_RETRIES', 'default' => 3 } ]
+        'settings' => [{ 'key' => 'MAX_RETRIES', 'default' => 3 }]
       }
 
       manifest = described_class.new(data)
@@ -103,7 +103,7 @@ RSpec.describe KiketSDK::Manifest do
       data = {
         'id' => 'test',
         'version' => '1.0.0',
-        'settings' => [ { 'key' => 'API_KEY', 'secret' => true } ]
+        'settings' => [{ 'key' => 'API_KEY', 'secret' => true }]
       }
 
       manifest = described_class.new(data)
@@ -118,7 +118,7 @@ RSpec.describe KiketSDK::Manifest do
       data = {
         'id' => 'test',
         'version' => '1.0.0',
-        'settings' => [ { 'key' => 'API_KEY', 'secret' => true } ]
+        'settings' => [{ 'key' => 'API_KEY', 'secret' => true }]
       }
 
       manifest = described_class.new(data)

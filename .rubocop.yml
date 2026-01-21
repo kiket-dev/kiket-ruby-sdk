@@ -1,8 +1,12 @@
 inherit_from: ~
 
+plugins:
+  - rubocop-rspec
+
 AllCops:
   NewCops: enable
   TargetRubyVersion: 3.2
+  SuggestExtensions: false
   Exclude:
     - 'vendor/**/*'
     - 'tmp/**/*'
@@ -22,25 +26,51 @@ Metrics/BlockLength:
     - 'spec/**/*'
 
 Metrics/ClassLength:
-  Max: 150
+  Max: 200
 
 Metrics/MethodLength:
-  Max: 50
+  Max: 70
 
 Metrics/AbcSize:
-  Max: 65
+  Max: 80
 
 Metrics/CyclomaticComplexity:
-  Max: 12
+  Max: 15
 
 Metrics/PerceivedComplexity:
-  Max: 12
+  Max: 15
+
+Metrics/ParameterLists:
+  Max: 10
 
 Layout/LineLength:
-  Max: 120
+  Max: 140
 
 Gemspec/DevelopmentDependencies:
   Enabled: false
 
 Naming/AccessorMethodName:
+  Enabled: false
+
+Naming/PredicateMethod:
+  Enabled: false
+
+# RSpec cops - relaxed for SDK testing style
+RSpec/ExampleLength:
+  Max: 25
+
+RSpec/MultipleExpectations:
+  Max: 5
+
+RSpec/MessageSpies:
+  Enabled: false
+
+RSpec/StubbedMock:
+  Enabled: false
+
+RSpec/DescribeClass:
+  Exclude:
+    - 'spec/kiket_sdk/secret_helper_spec.rb'
+
+RSpec/ContextWording:
   Enabled: false

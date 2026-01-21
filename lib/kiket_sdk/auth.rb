@@ -72,9 +72,7 @@ class KiketSDK
       cache_key = base_url
       cached = @jwks_cache[cache_key]
 
-      if cached && (Time.now - cached[:fetched_at]) < JWKS_CACHE_TTL
-        return cached[:jwks]
-      end
+      return cached[:jwks] if cached && (Time.now - cached[:fetched_at]) < JWKS_CACHE_TTL
 
       jwks_url = "#{base_url.chomp('/')}/.well-known/jwks.json"
       response = Faraday.get(jwks_url) do |req|

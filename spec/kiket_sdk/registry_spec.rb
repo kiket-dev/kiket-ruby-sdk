@@ -53,9 +53,9 @@ RSpec.describe KiketSDK::Registry do
     end
 
     it 'returns unique event names' do
-      registry.register('event1', 'v1', -> { })
-      registry.register('event1', 'v2', -> { })
-      registry.register('event2', 'v1', -> { })
+      registry.register('event1', 'v1', -> {})
+      registry.register('event1', 'v2', -> {})
+      registry.register('event2', 'v1', -> {})
 
       names = registry.event_names
 
@@ -65,8 +65,8 @@ RSpec.describe KiketSDK::Registry do
 
   describe '#all' do
     it 'returns all handlers' do
-      registry.register('event1', 'v1', -> { })
-      registry.register('event2', 'v1', -> { })
+      registry.register('event1', 'v1', -> {})
+      registry.register('event2', 'v1', -> {})
 
       expect(registry.all.size).to eq(2)
     end

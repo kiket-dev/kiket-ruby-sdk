@@ -20,8 +20,8 @@ module Kiket
       channel_type:,
       channel_id: nil,
       recipient_id: nil,
-      format: "markdown",
-      priority: "normal",
+      format: 'markdown',
+      priority: 'normal',
       metadata: nil,
       thread_id: nil,
       attachments: nil
@@ -57,27 +57,23 @@ module Kiket
     private
 
     def validate!
-      raise ArgumentError, "Message content is required" if @message.nil? || @message.empty?
+      raise ArgumentError, 'Message content is required' if @message.nil? || @message.empty?
 
-      unless %w[channel dm group].include?(@channel_type)
-        raise ArgumentError, "Invalid channel_type: #{@channel_type}"
-      end
+      raise ArgumentError, "Invalid channel_type: #{@channel_type}" unless %w[channel dm group].include?(@channel_type)
 
-      if @channel_type == "dm" && (@recipient_id.nil? || @recipient_id.empty?)
+      if @channel_type == 'dm' && (@recipient_id.nil? || @recipient_id.empty?)
         raise ArgumentError, 'recipient_id is required for channel_type="dm"'
       end
 
-      if @channel_type == "channel" && (@channel_id.nil? || @channel_id.empty?)
+      if @channel_type == 'channel' && (@channel_id.nil? || @channel_id.empty?)
         raise ArgumentError, 'channel_id is required for channel_type="channel"'
       end
 
-      unless %w[plain markdown html].include?(@format)
-        raise ArgumentError, "Invalid format: #{@format}"
-      end
+      raise ArgumentError, "Invalid format: #{@format}" unless %w[plain markdown html].include?(@format)
 
-      unless %w[low normal high urgent].include?(@priority)
-        raise ArgumentError, "Invalid priority: #{@priority}"
-      end
+      return if %w[low normal high urgent].include?(@priority)
+
+      raise ArgumentError, "Invalid priority: #{@priority}"
     end
   end
 
@@ -123,7 +119,7 @@ module Kiket
 
     # @param channel_id [String] ID of the channel to validate
     # @param channel_type [String] Type of channel ("channel", "dm", "group")
-    def initialize(channel_id:, channel_type: "channel")
+    def initialize(channel_id:, channel_type: 'channel')
       @channel_id = channel_id
       @channel_type = channel_type
     end

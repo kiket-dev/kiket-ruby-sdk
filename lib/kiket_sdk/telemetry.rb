@@ -21,7 +21,7 @@ class KiketSDK
                   f.response :json
                   f.adapter Faraday.default_adapter
                 end
-      end
+              end
     end
 
     def record(event, version, status, duration_ms, message = nil, error_class: nil, metadata: {})

@@ -47,7 +47,7 @@ class KiketSDK
   end
 
   class << self
-    alias_method :new, :new!
+    alias new new!
   end
 
   def initialize(config = {})
@@ -148,9 +148,7 @@ class KiketSDK
 
     # Get handler
     metadata = @registry.get(event, requested_version)
-    if metadata.nil?
-      halt 404, { error: "No handler registered for event '#{event}' with version '#{requested_version}'" }.to_json
-    end
+    halt 404, { error: "No handler registered for event '#{event}' with version '#{requested_version}'" }.to_json if metadata.nil?
 
     # Build authentication context from verified JWT and payload
     auth_context = build_auth_context(jwt_payload, payload)
@@ -313,7 +311,7 @@ class KiketSDK
   def build_secret_helper(payload_secrets)
     lambda do |key|
       # Payload secrets (per-org) take priority over ENV (extension defaults)
-      payload_secrets[key] || payload_secrets[key.to_s] || ENV[key.to_s]
+      payload_secrets[key] || payload_secrets[key.to_s] || ENV.fetch(key.to_s, nil)
     end
   end
 end

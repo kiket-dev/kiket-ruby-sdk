@@ -1,8 +1,8 @@
 Gem::Specification.new do |spec|
   spec.name          = 'kiket-sdk'
   spec.version       = '0.1.0'
-  spec.authors       = [ 'Kiket Team' ]
-  spec.email         = [ 'team@kiket.dev' ]
+  spec.authors       = ['Kiket Team']
+  spec.email         = ['team@kiket.dev']
 
   spec.summary       = 'Official Ruby SDK for building Kiket extensions'
   spec.description   = 'Build and run Kiket extensions with a batteries-included, strongly-typed Ruby toolkit'
@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
   spec.metadata['rubygems_mfa_required'] = 'true'
 
   spec.files = Dir.glob('{lib,spec}/**/*') + %w[README.md LICENSE]
-  spec.require_paths = [ 'lib' ]
+  spec.require_paths = ['lib']
 
   # Runtime dependencies
   spec.add_dependency 'faraday', '~> 2.8'
@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
   # Development dependencies
   spec.add_development_dependency 'rack-test', '~> 2.1'
   spec.add_development_dependency 'rspec', '~> 3.12'
-  spec.add_development_dependency 'rubocop', '~> 1.59'
-  spec.add_development_dependency 'rubocop-rspec', '~> 2.25'
+  spec.add_development_dependency 'rubocop', '~> 1.82'
+  spec.add_development_dependency 'rubocop-rspec', '~> 3.5'
   spec.add_development_dependency 'webmock', '~> 3.19'
 end

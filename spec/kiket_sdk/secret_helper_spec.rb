@@ -9,7 +9,7 @@ RSpec.describe 'KiketSDK secret helper' do
   # Simulate the build_secret_helper method logic
   def build_secret_helper(payload_secrets)
     lambda do |key|
-      payload_secrets[key] || payload_secrets[key.to_s] || ENV[key.to_s]
+      payload_secrets[key] || payload_secrets[key.to_s] || ENV.fetch(key.to_s, nil)
     end
   end
 
@@ -27,13 +27,13 @@ RSpec.describe 'KiketSDK secret helper' do
       end
 
       it 'falls back to ENV when payload secret is nil' do
-        allow(ENV).to receive(:[]).with('MISSING_SECRET').and_return('env-value')
+        allow(ENV).to receive(:fetch).with('MISSING_SECRET', nil).and_return('env-value')
 
         expect(secret_helper.call('MISSING_SECRET')).to eq('env-value')
       end
 
       it 'returns nil when secret is not in payload or ENV' do
-        allow(ENV).to receive(:[]).with('NONEXISTENT').and_return(nil)
+        allow(ENV).to receive(:fetch).with('NONEXISTENT', nil).and_return(nil)
 
         expect(secret_helper.call('NONEXISTENT')).to be_nil
       end
@@ -44,7 +44,7 @@ RSpec.describe 'KiketSDK secret helper' do
       let(:secret_helper) { build_secret_helper(payload_secrets) }
 
       it 'falls back to ENV' do
-        allow(ENV).to receive(:[]).with('ENV_ONLY_SECRET').and_return('from-env')
+        allow(ENV).to receive(:fetch).with('ENV_ONLY_SECRET', nil).and_return('from-env')
 
         expect(secret_helper.call('ENV_ONLY_SECRET')).to eq('from-env')
       end
@@ -55,7 +55,7 @@ RSpec.describe 'KiketSDK secret helper' do
       let(:secret_helper) { build_secret_helper(payload_secrets) }
 
       before do
-        allow(ENV).to receive(:[]).with('SHARED_KEY').and_return('from-env')
+        allow(ENV).to receive(:fetch).with('SHARED_KEY', nil).and_return('from-env')
       end
 
       it 'returns payload value when both exist' do

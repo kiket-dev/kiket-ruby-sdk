@@ -119,7 +119,8 @@ class KiketSDK
       payload = { project_id: @project_id }
       payload[:notes] = notes if notes
 
-      @client.post("/ext/intake_forms/#{URI.encode_www_form_component(form_key)}/submissions/#{submission_id}/approve", payload)
+      @client.post("/ext/intake_forms/#{URI.encode_www_form_component(form_key)}/submissions/#{submission_id}/approve",
+                   payload)
     end
 
     ##
@@ -136,7 +137,8 @@ class KiketSDK
       payload = { project_id: @project_id }
       payload[:notes] = notes if notes
 
-      @client.post("/ext/intake_forms/#{URI.encode_www_form_component(form_key)}/submissions/#{submission_id}/reject", payload)
+      @client.post("/ext/intake_forms/#{URI.encode_www_form_component(form_key)}/submissions/#{submission_id}/reject",
+                   payload)
     end
 
     ##
