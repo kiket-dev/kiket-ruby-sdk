@@ -241,6 +241,69 @@ sdk.register('workflow.triggered', version: 'v1') do |payload, context|
 end
 ```
 
+## Response Helpers
+
+The SDK provides helper methods for building properly formatted responses. These ensure your extension returns data in the format Kiket expects.
+
+### Basic Responses
+
+```ruby
+# Allow (success) response
+KiketSDK.allow(message: 'Operation completed')
+# => { status: 'allow', message: 'Operation completed', metadata: {} }
+
+# Deny response
+KiketSDK.deny(message: 'Invalid credentials')
+# => { status: 'deny', message: 'Invalid credentials', metadata: {} }
+
+# Pending response (for async operations)
+KiketSDK.pending(message: 'Awaiting approval')
+# => { status: 'pending', message: 'Awaiting approval', metadata: {} }
+```
+
+### Output Fields
+
+Output fields allow your extension to expose generated data (like email addresses, URLs, or status info) in the extension configuration UI. Users can see and copy these values after setup.
+
+```ruby
+sdk.register('extension.testConnection', version: 'v1') do |payload, context|
+  # Perform setup (e.g., create Mailjet parse route)
+  route = create_parse_route(webhook_url)
+
+  # Return success with output fields
+  KiketSDK.allow(
+    message: 'Successfully configured',
+    data: { route_id: route.id },
+    output_fields: {
+      'inbound_email' => route.email,
+      'connection_status' => 'active'
+    }
+  )
+end
+```
+
+Output fields are declared in your extension manifest:
+
+```yaml
+extension:
+  output_fields:
+    inbound_email:
+      label: Inbound Email
+      description: Send emails to this address to create issues
+      type: copyable
+      icon: envelope
+    connection_status:
+      label: Connection Status
+      type: badge
+```
+
+**Supported output field types:**
+- `copyable` - Text field with copy button (default)
+- `url` - Clickable URL with copy button
+- `code` - Monospace code block
+- `badge` - Status indicator with color
+- `status` - Rich status with icon
+
 ## Testing
 
 The SDK includes test helpers:
